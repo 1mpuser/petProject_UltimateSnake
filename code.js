@@ -2,7 +2,8 @@
 //to-do
 //take a note with that functions which would me moved in different file
 let game = document.getElementById('game');
-let forbiddenClassesArr = ['snake'];
+const forbiddenCellClassesForSnake = ['snake'];
+const cellClassesForExtending = [];
 let eatingCellsArr = [];
 function createCellsInDiv() {
 	for (let i = 0; i < 1225; i++) {
@@ -63,8 +64,9 @@ class Snake {
 	//or we just do some directions which are forbiden to do
 	//we ristrict them in array where are the forbidden classes
 	arrOfBodyCells = [];
-	directionsObj = {};
-	constructor(x = 18, y = 18, time = 1000, color = false, direction = 'right') {
+	directionsObj = [];
+	interval;
+	constructor(x = 18, y = 18, direction = 'right', time = 1000, color = false) {
 		this.x = x;
 		this.y = y;
 		this.color = color;
@@ -109,12 +111,18 @@ class Snake {
 	}
 	moveSnake(direction = 'right') {
 		//we'll unshift last element in array and pop the last element
+		//we'll try is this direction available or not right here but if it passes
+		//the conditional construction we'll do this constuction 4 next move in 4 terms
+		//we'll fix them next time
+		let tmpAvailableDirectionsArray = [];
 		if (direction == 'right') {
 			if (+this.arrOfBodyCells[0].getAttribute('x') == doubleArr[0].length)
 				this.x = 0;
 			else this.x++;
 			this.makeADOT(this.x, this.y);
 			this.deleteLastCell();
+			let availableDirections = this.checkAvailableDirections(direction);
+			tmpAvailableDirectionsArray.push(...availableDirections);
 		}
 		if (direction == 'down') {
 			if (+this.arrOfBodyCells[0].getAttribute('y') == doubleArr.length)
@@ -138,26 +146,69 @@ class Snake {
 			this.makeADOT(this.x, this.y);
 			this.deleteLastCell();
 		}
+		console.log(this.checkAvailableDirections());
+	}
+	createAnArrWithNearbyCells(direction) {
+		//we'll create an array with clockwise direction from 12 o'clock
+		let currentCell = this.arrOfBodyCells[0];
+		console.log(currentCell);
+		let x = this.x;
+		let y = this.y;
+		let arrOfNearbyCells = [];
+		let rightX = x + 1;
+		let leftX = x - 1;
+		let upY = y - 1;
+		let downY = y + 1;
+		if (rightX >= doubleArr[0].length) rightX = 0;
+		if (leftX < 0) leftX = doubleArr[0].length - 1;
+		if (upY < 0) upY = 0;
+		if (downY >= doubleArr.length) downY = doubleArr.length - 1;
+		if (direction == 'right') {
+			arrOfNearbyCells.push(doubleArr[upY][x]);
+			arrOfNearbyCells.push(doubleArr[y][rightX]);
+			arrOfNearbyCells.push(doubleArr[downY][x]);
+		}
+		if (direction == 'left')
+			arrOfNearbyCells.push(
+				doubleArr[upY][x],
+				doubleArr[downY][x],
+				doubleArr[y][leftX]
+			);
+		if (direction == 'up')
+			arrOfNearbyCells.push(
+				doubleArr[upY][x],
+				doubleArr[y][rightX],
+				doubleArr[y][leftX]
+			);
+		if (direction == 'down')
+			arrOfNearbyCells.push(
+				doubleArr[y][rightX],
+				doubleArr[downY][x],
+				doubleArr[y][leftX]
+			);
+		return arrOfNearbyCells;
 	}
 	checkAvailableDirections(direction = this.direction) {
-		// complete arr with directions and bind it with moving
-		let currentCell = this.arrOfBodyCells[this.arrOfBodyCells.length - 1];
-		let x = +currentCell.getAttribute('x') - 1;
-		let y = +currentCell.getAttribute('y') - 1;
-		let arrOfNearbyCells = [];
-		let rightX = x++;
-		let leftX = x--;
-		let upY = y++;
-		let downY = y--;
-		if (rightX > doubleArr[0].length - 1) rightX = 0;
-		if (leftX < 0) leftX = doubleArr[0].length - 1;
-		if (upY > doubleArr.length - 1) upY = 0;
-		if (downY < 0) downY = doubleArr.length - 1;
-		if (direction == 'right') {
-		}
+		let nearbyCells = this.createAnArrWithNearbyCells(direction);
+		let availableDirections = nearbyCells.map((cell) => {
+			for (let clas of forbiddenCellClassesForSnake) {
+				if (cell.classList.contains(clas)) return 'forbidden';
+			}
+			for (let clas of cellClassesForExtending) {
+				if (cell.classList.contains(clas)) return 'extend';
+			}
+			return 'available';
+		});
+		return availableDirections;
+	}
+	playSnake() {
+		interval = setInterval(() => this.moveSnake(this.direction), this.time);
+	}
+	pauseSnake() {
+		clearInterval(this.interval);
 	}
 }
-let snake = new Snake();
+let snake = new Snake(13, 13, 'right');
 snake.makeADOT(snake.x, snake.y);
 for (let i = 0; i < 10; i++) snake.addTheLength();
 window.addEventListener('keydown', function (event) {
@@ -172,5 +223,5 @@ window.addEventListener('keydown', function (event) {
 		else snake.direction = direction;
 	}
 });
-setInterval(() => snake.moveSnake(snake.direction), 100);
-setTimeout(() => snake.addTheLength(), 4000);
+let intercal = setInterval(() => snake.moveSnake(snake.direction), 100);
+setTimeout(() => clearInterval(intercal), 3000);
