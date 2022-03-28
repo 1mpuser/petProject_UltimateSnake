@@ -1,7 +1,7 @@
 //snake is moving through setTimeOut
 //to-do
 //take a note with that functions which would me moved in different file
-let game = document.getElementById('game');
+const game = document.getElementById('game');
 const forbiddenCellClassesForSnake = ['snake'];
 const cellClassesForExtending = [];
 let eatingCellsArr = [];
@@ -64,7 +64,7 @@ class Snake {
 	//or we just do some directions which are forbiden to do
 	//we ristrict them in array where are the forbidden classes
 	arrOfBodyCells = [];
-	directionsObj = [];
+	directionsArr = []; //[left, up, right, down]
 	interval;
 	constructor(x = 18, y = 18, direction = 'right', time = 1000, color = false) {
 		this.x = x;
@@ -109,12 +109,22 @@ class Snake {
 		lastCell.classList.remove('snake');
 		this.arrOfBodyCells.pop();
 	}
+	deleteSnake() {
+		this.direction = false;
+		for (let cell of this.arrOfBodyCells) cell.classList.remove('snake');
+	}
 	moveSnake(direction = 'right') {
 		//we'll unshift last element in array and pop the last element
 		//we'll try is this direction available or not right here but if it passes
 		//the conditional construction we'll do this constuction 4 next move in 4 terms
 		//we'll fix them next time
+		let indexesOfDirections = ['left', 'up', 'right', 'down'];
+		let indexOfDirection = indexesOfDirections.indexOf(direction);
+		if (this.directionsArr[indexOfDirection] == 'forbidden') this.deleteSnake();
+		console.log(this.directionsArr);
 		let tmpAvailableDirectionsArray = [];
+		this.directionsArr.length = 0;
+		if (!direction) return;
 		if (direction == 'right') {
 			if (+this.arrOfBodyCells[0].getAttribute('x') == doubleArr[0].length)
 				this.x = 0;
@@ -122,7 +132,8 @@ class Snake {
 			this.makeADOT(this.x, this.y);
 			this.deleteLastCell();
 			let availableDirections = this.checkAvailableDirections(direction);
-			tmpAvailableDirectionsArray.push(...availableDirections);
+			this.directionsArr.push('unexpected tail');
+			this.directionsArr.push(...availableDirections);
 		}
 		if (direction == 'down') {
 			if (+this.arrOfBodyCells[0].getAttribute('y') == doubleArr.length)
@@ -130,6 +141,11 @@ class Snake {
 			else this.y++;
 			this.makeADOT(this.x, this.y);
 			this.deleteLastCell();
+			let availableDirections = this.checkAvailableDirections(direction);
+			this.directionsArr.push(availableDirections[2]);
+			this.directionsArr.push('unexpected tail');
+			this.directionsArr.push(availableDirections[0]);
+			this.directionsArr.push(availableDirections[1]);
 		}
 		if (direction == 'up') {
 			if (+this.arrOfBodyCells[0].getAttribute('y') == 1)
@@ -137,6 +153,12 @@ class Snake {
 			else this.y--;
 			this.makeADOT(this.x, this.y);
 			this.deleteLastCell();
+			let availableDirections = this.checkAvailableDirections(direction);
+			tmpAvailableDirectionsArray.push(availableDirections[2]);
+			tmpAvailableDirectionsArray.push(availableDirections[0]);
+			tmpAvailableDirectionsArray.push(availableDirections[1]);
+			tmpAvailableDirectionsArray.push('unexpected tail');
+			this.directionsArr = tmpAvailableDirectionsArray;
 		}
 		if (direction == 'left') {
 			this.direction = 'left';
@@ -145,13 +167,16 @@ class Snake {
 			else this.x--;
 			this.makeADOT(this.x, this.y);
 			this.deleteLastCell();
+			let availableDirections = this.checkAvailableDirections(direction);
+			this.directionsArr.push(availableDirections[2]);
+			this.directionsArr.push(availableDirections[0]);
+			this.directionsArr.push('unexpected tail');
+			this.directionsArr.push(availableDirections[1]);
 		}
-		console.log(this.checkAvailableDirections());
 	}
 	createAnArrWithNearbyCells(direction) {
 		//we'll create an array with clockwise direction from 12 o'clock
 		let currentCell = this.arrOfBodyCells[0];
-		console.log(currentCell);
 		let x = this.x;
 		let y = this.y;
 		let arrOfNearbyCells = [];
@@ -161,8 +186,8 @@ class Snake {
 		let downY = y + 1;
 		if (rightX >= doubleArr[0].length) rightX = 0;
 		if (leftX < 0) leftX = doubleArr[0].length - 1;
-		if (upY < 0) upY = 0;
-		if (downY >= doubleArr.length) downY = doubleArr.length - 1;
+		if (upY < 0) upY = doubleArr.length - 1;
+		if (downY >= doubleArr.length) downY = 0;
 		if (direction == 'right') {
 			arrOfNearbyCells.push(doubleArr[upY][x]);
 			arrOfNearbyCells.push(doubleArr[y][rightX]);
@@ -208,9 +233,9 @@ class Snake {
 		clearInterval(this.interval);
 	}
 }
-let snake = new Snake(13, 13, 'right');
+let snake = new Snake(18, 18, 'right');
 snake.makeADOT(snake.x, snake.y);
-for (let i = 0; i < 10; i++) snake.addTheLength();
+for (let i = 0; i < 18; i++) snake.addTheLength();
 window.addEventListener('keydown', function (event) {
 	let regEx = new RegExp(/Arrow.+/g);
 	if (regEx.test(event.key)) {
@@ -224,4 +249,3 @@ window.addEventListener('keydown', function (event) {
 	}
 });
 let intercal = setInterval(() => snake.moveSnake(snake.direction), 100);
-setTimeout(() => clearInterval(intercal), 3000);
